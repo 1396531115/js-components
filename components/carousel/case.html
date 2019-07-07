@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="browser.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .wrap {
+            position: relative;
+            display: block;
+        }
+        .wrap1 {
+            display: block;
+        }
+
+        .prev, .next {
+            position: absolute;
+            width: 25px;
+            height: 45px;
+            background: url(img/ar.png) no-repeat;
+            z-index: 100;
+
+            top: 155px;
+        }
+
+        .prev {
+            left: 13px;
+        }
+
+        .next {
+            transform: rotate(180deg);
+            right: 13px;
+        }
+
+        .pic {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+
+        #txt {
+            width: 536px;
+            height: 71px;
+            position: absolute;
+            left: 297px;
+            bottom: 185px;
+            text-align: center;
+            font: 20px/71px "微软雅黑";
+            color: #666;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        button {
+            border: 0;
+        }
+
+        .carousel-dots {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            z-index: 100;
+            text-align: center;
+        }
+        .carousel-dots-left {
+            position: absolute;
+            left: 0;
+            z-index: 100;
+        }
+        .carousel-dots > .active,  .carousel-dots > a:hover {
+            background-color: #63caa8;
+        }
+
+        .carousel-dots > a {
+            display: inline-block;
+            cursor: pointer;
+            margin: 5px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #458c74;
+        }
+        .carousel-dots-left > a {
+            display: block;
+        }
+        .carousel-dots > a > img {
+            position: absolute;
+            width: 25px;
+            height: 20px;
+            top: -15px;
+            display: none;
+        }
+
+        .carousel-dots > a:hover > img {
+            display: inline-block;
+        }
+
+        .pic > img {
+            position: absolute;
+            z-index: 1;
+            border: 0;
+            padding: 0;
+            margin: 0;
+        }
+
+        .title {
+            right: 0px;
+            background-color: rgba(54, 54, 54, 0.85);
+            top: 0;
+            width: 25%;
+            z-index: 100;
+            padding: 0 16px;
+            position: absolute;
+            height: 100%;
+            overflow: scroll;
+            overflow-x: hidden;
+        }
+        .title::-webkit-scrollbar {
+            background-color: transparent;
+        }
+        .title::-webkit-scrollbar-thumb {
+            background-color: rgba(103,103,103,.5);
+            border-radius: 8px;
+        }
+        .title > span {
+            margin: 0 auto;
+            display: inline-block;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            height: 70px;
+            line-height: 70px;
+            color: #e7e7e7;
+        }
+        .title > span.active-title {
+            color: #cc9e47;
+            transform: scale(1.2);
+            transform-origin: left;
+            transition: transform 100ms ease-out;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+</div>
+<div class="wrap1">
+</div>
+<script>
+    function Wrap(obj) {
+        this.wrap = obj.wrap;
+        this.size = obj.size || {w: '536px', h: '356px'};
+        this.curIndex = 0;
+        this.imgUrl = obj.data.img;
+        this.imgTitle = obj.data.title;
+        this.length = obj.data.img.length;
+        this.isShowDots = obj.isShowDots;
+        this.isShowArrow = obj.isShowArrow;
+        this.isShowTitle = obj.isShowTitle && this.imgTitle;
+        this.initDom(document);
+    }
+    Wrap.prototype = {
+        constructor: Wrap,
+        // 初始化DOM结构，根据传参进行页面的渲染
+        initDom: function(document) {
+            let doc = document;
+            let imgDom = '', titleDom = '', dotDom = '';
+            this.wrap.style.width = this.size.w;
+            this.wrap.style.height = this.size.h;
+            this.wrap.style.position = 'relative';
+            for(let i = 0; i < this.length; i++) {
+                if(this.imgUrl) imgDom += `<img class="img-card" src="${this.imgUrl[i]}">`;
+                if(this.imgTitle) titleDom += `<span>${this.imgTitle[i]}</span>`;
+                if(this.imgUrl) dotDom += `<a><img src="${this.imgUrl[i]}" alt=""></a>`
+            }
+            let dotContainer = this.isShowDots ? `<nav class="carousel-dots dots-${this.wrap.className}">${dotDom}</nav>` : '';
+            let titleContainer = this.isShowTitle ? `<div class="title title-${this.wrap.className}">${titleDom}</div>` : '';
+            let prev = this.isShowArrow ? `<a class="prev prev-${this.wrap.className}" href="javascript:void(0);"></a>` : '';
+            let next = this.isShowArrow ? `<a class="next next-${this.wrap.className}" href="javascript:void(0);"></a>` : '';
+            this.wrap.innerHTML = `<div class="pic pic-${this.wrap.className}">${prev}${next}${imgDom}</div>` + titleContainer + dotContainer;
+
+            this.initShow(doc)
+            this.initEvent(doc);
+        },
+        // 初始化默认显示第一张图
+        initShow: function(doc) {
+            doc.querySelectorAll(`.pic-${this.wrap.className} img`)[0].style.zIndex = '2';
+            if(this.isShowDots) doc.querySelectorAll(`.${this.wrap.className} a`)[0].classList.add('active');
+            if(this.isShowTitle) doc.querySelectorAll(`.${this.wrap.className} span`)[0].classList.add('active-title');
+        },
+        // 初始化事件
+        initEvent: function(doc) {
+            let dots = doc.querySelectorAll(`.dots-${this.wrap.className} a`);
+            let titles = doc.querySelectorAll(`.title-${this.wrap.className} span`);
+            let imgs = doc.querySelectorAll(`.${this.wrap.className} img`);
+            let prev = doc.querySelector(`.prev-${this.wrap.className}`);
+            let next = doc.querySelector(`.next-${this.wrap.className}`);
+            for(let index = 0; index < this.length; index++) {
+                dots[index].index = index;
+                let argv = {imgs, dots, titles, index}
+                if(this.isShowDots) dots[index].onclick = this.selectItem.bind(this, argv);
+                if(this.isShowTitle) titles[index].onmouseenter = this.selectItem.bind(this, argv);
+                if(this.isShowArrow) {
+                    prev.onclick = this.slideToPrev.bind(this, argv);
+                    next.onclick = this.slideToNext.bind(this, argv);
+                }
+            }
+        },
+        // 处理选择某项的事件
+        selectItem: function(argv){
+            let {imgs, dots, titles, index} = argv;
+            if(this.curIndex === index) return 0;
+            imgs[this.curIndex].style.zIndex = '';
+            if(this.isShowDots) dots[this.curIndex].classList.remove('active');
+            if(this.isShowTitle) titles[this.curIndex].classList.remove('active-title');
+            if(this.isShowDots) dots[index].classList.add('active');
+            if(this.isShowTitle) titles[index].classList.add('active-title');
+            imgs[index].style.zIndex = '2';
+            this.curIndex = index;
+        },
+        // 显示下一张图片
+        slideToNext: function(argv) {
+            let {imgs, dots, titles} = argv;
+            imgs[this.curIndex].style.zIndex = '';
+            if(this.isShowDots) dots[this.curIndex].classList.remove('active');
+            if(this.isShowTitle) titles[this.curIndex].classList.remove('active-title');
+            if(this.curIndex === 4) this.curIndex = -1;
+            this.curIndex++;
+            imgs[this.curIndex].style.zIndex = '2';
+            if(this.isShowDots) dots[this.curIndex].classList.add('active');
+            if(this.isShowTitle) titles[this.curIndex].classList.add('active-title');
+        },
+        // 显示上一张图片
+        slideToPrev: function(argv) {
+            let {imgs, dots, titles} = argv;
+            imgs[this.curIndex].style.zIndex = '';
+            if(this.isShowDots) dots[this.curIndex].classList.remove('active');
+            if(this.isShowTitle) titles[this.curIndex].classList.remove('active-title');
+            if(this.curIndex === 0) this.curIndex = 5;
+            this.curIndex--;
+            imgs[this.curIndex].style.zIndex = '2';
+            if(this.isShowDots) dots[this.curIndex].classList.add('active');
+            if(this.isShowTitle) titles[this.curIndex].classList.add('active-title');
+        }
+    };
+    var warp1 = new Wrap({
+        wrap: document.querySelector('.wrap1'),
+        size: {w: '536px', h: '356px'},
+        data: {
+            img: ['img/img1.jpg','img/img2.jpg','img/img3.jpg','img/img4.jpg','img/img5.jpg'],
+            title: ['糖醋卤鸭蛋', '番茄鸡丁回锅肉', '老干妈泡菜', '水煮蛋糕', '蒜泥小龙虾']
+        },
+        isShowDots: true,
+        isShowTitle: true,
+        isShowArrow: true,
+    })
+</script>
+</body>
+</html>
